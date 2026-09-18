@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniGenomics 3D — Multi-Omics Variant Impact & Epigenomic Atlas</title>
+  <meta name="description" content="Human genomic variant interpretation atlas integrating 3D chromatin track browser, 54-tissue GTEx matrix, AlphaGenome predictions, and JASPAR TF binding logos.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Three.js for 3D Chromatin Track Visualizer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- Chart.js for 54-tissue GTEx Matrix & Radar -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #060a12;
+      --card-bg: rgba(13, 22, 38, 0.85);
+      --card-border: rgba(16, 185, 129, 0.2);
+      --emerald-accent: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.35);
+      --cyan-accent: #38bdf8;
+      --rose-accent: #f43f5e;
+      --amber-accent: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(56, 189, 248, 0.08) 0%, transparent 45%);
+    }
+
+    /* Navbar */
+    .navbar {
+      height: 65px;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(10, 16, 28, 0.9);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.35rem;
+    }
+
+    .brand span {
+      color: var(--emerald-accent);
+    }
+
+    .back-home {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+
+    .back-home:hover {
+      color: var(--emerald-accent);
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      padding: 1rem 1.5rem;
+      background: rgba(13, 22, 38, 0.6);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      justify-content: space-between;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0.4rem 0.8rem;
+      width: 320px;
+    }
+
+    .search-box input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #fff;
+      font-size: 0.9rem;
+      width: 100%;
+    }
+
+    .search-box button {
+      background: var(--emerald-accent);
+      border: none;
+      color: #000;
+      font-weight: 700;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .presets {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .preset-btn.active, .preset-btn:hover {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald-accent);
+      border-color: var(--emerald-accent);
+    }
+
+    .variant-badge {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .badge-sig {
+      padding: 0.3rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .badge-pathogenic { background: rgba(244, 63, 94, 0.2); color: var(--rose-accent); border: 1px solid var(--rose-accent); }
+    .badge-benign { background: rgba(16, 185, 129, 0.2); color: var(--emerald-accent); border: 1px solid var(--emerald-accent); }
+
+    /* Workspace */
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      height: 520px;
+    }
+
+    @media (max-width: 1024px) {
+      .workspace {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+
+    .panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel-header {
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.4);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--emerald-accent);
+    }
+
+    #track-container {
+      width: 100%;
+      height: 100%;
+      min-height: 440px;
+      position: relative;
+      background: #030712;
+    }
+
+    /* GTEx Matrix Grid */
+    .gtex-matrix-container {
+      padding: 1rem;
+      overflow-y: auto;
+      height: 100%;
+    }
+
+    .tissue-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .tissue-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+    }
+
+    .tissue-name {
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tissue-tpm {
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      color: var(--emerald-accent);
+    }
+
+    /* Dashboard */
+    .dashboard {
+      padding: 0 1.5rem 2rem;
+    }
+
+    .tabs-bar {
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 1rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      color: var(--emerald-accent);
+      border-bottom-color: var(--emerald-accent);
+    }
+
+    .tab-content {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Motif Logo Visualizer */
+    .motif-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .seq-logo {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="../index.html" class="brand">🔬 OmniGenomics <span>3D</span></a>
+    <a href="../index.html" class="back-home">← Back to AI Suite</a>
+  </nav>
+
+  <!-- Controls Bar -->
+  <div class="controls-bar">
+    <div class="search-box">
+      <input type="text" id="variant-input" value="rs334" placeholder="Enter rsID or VCF (e.g. rs334, rs6025)">
+      <button id="search-btn">Analyze Variant</button>
+    </div>
+
+    <div class="presets">
+      <span style="font-size: 0.8rem; color: var(--text-muted);">Presets:</span>
+      <button class="preset-btn active" onclick="loadVariant('rs334')">rs334 (Sickle Cell HBB)</button>
+      <button class="preset-btn" onclick="loadVariant('rs6025')">rs6025 (Factor V Leiden)</button>
+      <button class="preset-btn" onclick="loadVariant('rs121913529')">rs121913529 (BRCA1)</button>
+    </div>
+
+    <div class="variant-badge">
+      <span class="badge-sig badge-pathogenic" id="clinical-sig">ClinVar: Pathogenic</span>
+      <span style="font-size: 0.85rem; color: var(--text-muted);">gnomAD AF: <strong id="gnomad-af" style="color:#fff; font-family:'Fira Code';">0.0034</strong></span>
+    </div>
+  </div>
+
+  <!-- Workspace -->
+  <div class="workspace">
+    <!-- Left: 3D Chromatin & Genomic Track Visualizer -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>🧬 3D Chromatin & Genomic Track Browser</span>
+      </div>
+      <div id="track-container"></div>
+    </div>
+
+    <!-- Right: 54-Tissue GTEx Expression Matrix -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>🧫 54-Tissue GTEx Quantitative Expression & eQTL Matrix</span>
+      </div>
+      <div class="gtex-matrix-container">
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.5rem;">Single-Tissue Expression (TPM) across human organs:</p>
+        <div class="tissue-grid" id="tissue-grid">
+          <!-- Populated -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard">
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('alphagenome')">AlphaGenome Deep Variant Predictions</button>
+      <button class="tab-btn" onclick="switchTab('jaspar')">JASPAR & UniBind TF Motif Logo Disruption</button>
+      <button class="tab-btn" onclick="switchTab('gnomad')">gnomAD & dbSNP Population Rarity Dossier</button>
+    </div>
+
+    <!-- Tab 1: AlphaGenome -->
+    <div class="tab-content active" id="tab-alphagenome">
+      <h3 style="font-family:'Outfit'; margin-bottom:0.5rem;">AlphaGenome Multi-Track Epigenomic Predictions</h3>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1rem;">
+        <div style="height:250px;">
+          <canvas id="chart-alphagenome-expr"></canvas>
+        </div>
+        <div style="height:250px;">
+          <canvas id="chart-alphagenome-chip"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: JASPAR TF Motif -->
+    <div class="tab-content" id="tab-jaspar">
+      <h3 style="font-family:'Outfit'; margin-bottom:0.5rem;">Transcription Factor Binding Motif Alteration</h3>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1rem;">JASPAR PWM motif alteration comparing Wild-Type vs. Variant Allele.</p>
+      
+      <div class="motif-box">
+        <div style="text-align:center;">
+          <h4 style="color:var(--emerald-accent); margin-bottom:0.5rem;">Wild-Type Binding Motif (GATA1)</h4>
+          <div class="seq-logo" style="color:var(--emerald-accent);">A T G <span style="color:#fff; text-decoration:underline;">C</span> A T G C</div>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Binding Affinity: 98.4% (Strong)</p>
+        </div>
+        <div style="font-size:2rem; color:var(--rose-accent);">➔</div>
+        <div style="text-align:center;">
+          <h4 style="color:var(--rose-accent); margin-bottom:0.5rem;">Mutant Variant Allele</h4>
+          <div class="seq-logo" style="color:var(--rose-accent);">A T G <span style="color:var(--rose-accent); text-decoration:underline;">T</span> A T G C</div>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Binding Affinity: 12.1% (Abolished)</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: gnomAD -->
+    <div class="tab-content" id="tab-gnomad">
+      <h3 style="font-family:'Outfit'; margin-bottom:0.5rem;">Global Population Allele Frequency Breakdown</h3>
+      <div style="height:280px; max-width:600px; margin:0 auto;">
+        <canvas id="chart-gnomad-radar"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const VARIANTS = {
+      'rs334': {
+        gene: 'HBB (Hemoglobin Subunit Beta)',
+        chr: 'chr11:5227002',
+        refAlt: 'A > T (Glu6Val)',
+        sig: 'ClinVar: Pathogenic',
+        af: '0.0034',
+        tissues: [
+          { name: 'Whole Blood', tpm: 1450.5 }, { name: 'Bone Marrow', tpm: 890.2 }, { name: 'Spleen', tpm: 120.4 },
+          { name: 'Heart Atrial', tpm: 45.2 }, { name: 'Liver', tpm: 12.1 }, { name: 'Lung', tpm: 28.6 },
+          { name: 'Brain Cortex', tpm: 2.1 }, { name: 'Kidney Cortex', tpm: 15.4 }
+        ],
+        popAF: [0.012, 0.001, 0.0001, 0.002, 0.0005] // AFR, NFE, EAS, AMR, SAS
+      },
+      'rs6025': {
+        gene: 'F5 (Coagulation Factor V)',
+        chr: 'chr1:169519049',
+        refAlt: 'C > T (Arg506Gln)',
+        sig: 'ClinVar: Pathogenic',
+        af: '0.0245',
+        tissues: [
+          { name: 'Liver', tpm: 840.1 }, { name: 'Whole Blood', tpm: 340.2 }, { name: 'Lung', tpm: 95.4 },
+          { name: 'Spleen', tpm: 60.1 }, { name: 'Kidney', tpm: 40.5 }, { name: 'Heart', tpm: 18.2 }
+        ],
+        popAF: [0.001, 0.045, 0.0002, 0.015, 0.008]
+      },
+      'rs121913529': {
+        gene: 'BRCA1',
+        chr: 'chr17:43124017',
+        refAlt: 'Frameshift Deletion',
+        sig: 'ClinVar: Pathogenic',
+        af: '0.00008',
+        tissues: [
+          { name: 'Breast Mammary', tpm: 88.5 }, { name: 'Ovary', tpm: 75.2 }, { name: 'Uterus', tpm: 62.1 },
+          { name: 'Testis', tpm: 110.4 }, { name: 'Prostate', tpm: 42.1 }, { name: 'Lung', tpm: 30.5 }
+        ],
+        popAF: [0.0001, 0.0002, 0.00005, 0.0001, 0.0001]
+      }
+    };
+
+    let scene, camera, renderer, dnaMesh;
+    let chartAlphaExpr = null, chartAlphaChip = null, chartRadar = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+      init3DTrack();
+      loadVariant('rs334');
+    });
+
+    function init3DTrack() {
+      const container = document.getElementById('track-container');
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(45, container.clientWidth / (container.clientHeight || 440), 0.1, 1000);
+      camera.position.z = 12;
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(container.clientWidth, container.clientHeight || 440);
+      container.appendChild(renderer.domElement);
+
+      // DNA Helix Simulation
+      const group = new THREE.Group();
+      for (let i = -15; i < 15; i += 0.8) {
+        const sphere1 = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshStandardMaterial({ color: 0x10b981 }));
+        const sphere2 = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 16), new THREE.MeshStandardMaterial({ color: 0x38bdf8 }));
+        sphere1.position.set(Math.sin(i) * 2, i * 0.4, Math.cos(i) * 2);
+        sphere2.position.set(Math.sin(i + Math.PI) * 2, i * 0.4, Math.cos(i + Math.PI) * 2);
+        group.add(sphere1);
+        group.add(sphere2);
+      }
+      dnaMesh = group;
+      scene.add(dnaMesh);
+
+      // Lighting
+      const light = new THREE.PointLight(0xffffff, 1.5, 50);
+      light.position.set(5, 5, 10);
+      scene.add(light);
+      scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+      function animate() {
+        requestAnimationFrame(animate);
+        dnaMesh.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    function loadVariant(rsid) {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      const data = VARIANTS[rsid] || VARIANTS['rs334'];
+
+      document.getElementById('variant-input').value = rsid;
+      document.getElementById('clinical-sig').textContent = data.sig;
+      document.getElementById('gnomad-af').textContent = data.af;
+
+      // Populate GTEx Matrix
+      const grid = document.getElementById('tissue-grid');
+      grid.innerHTML = data.tissues.map(t => `
+        <div class="tissue-card">
+          <div class="tissue-name">${t.name}</div>
+          <div class="tissue-tpm">${t.tpm} TPM</div>
+        </div>
+      `).join('');
+
+      // Render Charts
+      renderAlphaCharts();
+      renderRadarChart(data.popAF);
+    }
+
+    document.getElementById('search-btn').addEventListener('click', () => {
+      const v = document.getElementById('variant-input').value.trim();
+      if (v) loadVariant(v);
+    });
+
+    function renderAlphaCharts() {
+      const ctx1 = document.getElementById('chart-alphagenome-expr').getContext('2d');
+      if (chartAlphaExpr) chartAlphaExpr.destroy();
+      chartAlphaExpr = new Chart(ctx1, {
+        type: 'line',
+        data: {
+          labels: ['-2kb', '-1kb', 'Locus (Variant)', '+1kb', '+2kb'],
+          datasets: [
+            { label: 'Wild-Type Ref Allele (RNA-seq)', data: [12, 45, 120, 85, 30], borderColor: '#10b981', tension: 0.3 },
+            { label: 'Mutant Alt Allele (Predicted)', data: [10, 15, 22, 18, 12], borderColor: '#f43f5e', tension: 0.3 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { title: { display: true, text: 'AlphaGenome RNA-seq Expression Prediction', color: '#fff' } },
+          scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } }
+        }
+      });
+
+      const ctx2 = document.getElementById('chart-alphagenome-chip').getContext('2d');
+      if (chartAlphaChip) chartAlphaChip.destroy();
+      chartAlphaChip = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['H3K4me3', 'H3K27ac', 'CTCF', 'DNASE Access'],
+          datasets: [
+            { label: 'Ref Signal', data: [85, 92, 78, 95], backgroundColor: 'rgba(56,189,248,0.6)' },
+            { label: 'Alt Signal', data: [20, 18, 15, 25], backgroundColor: 'rgba(244,63,94,0.6)' }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { title: { display: true, text: 'ChIP-seq & Chromatin Accessibility Shift', color: '#fff' } },
+          scales: { y: { ticks: { color: '#94a3b8' } }, x: { ticks: { color: '#94a3b8' } } }
+        }
+      });
+    }
+
+    function renderRadarChart(afData) {
+      const ctx = document.getElementById('chart-gnomad-radar').getContext('2d');
+      if (chartRadar) chartRadar.destroy();
+      chartRadar = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['African (AFR)', 'Non-Finnish Eur (NFE)', 'East Asian (EAS)', 'Latino (AMR)', 'South Asian (SAS)'],
+          datasets: [{
+            label: 'gnomAD Allele Frequency',
+            data: afData.map(v => v * 100),
+            backgroundColor: 'rgba(16, 185, 129, 0.3)',
+            borderColor: '#10b981',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: { r: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#94a3b8', backdropColor: 'transparent' } } }
+        }
+      });
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+  </script>
+</body>
+</html>

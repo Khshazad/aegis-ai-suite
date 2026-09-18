@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Science & Humanities AI Workstation Suite</title>
+  <meta name="description" content="Next-Gen AI Workstation Suite featuring PharmaVerse 3D, ChronoTex 3D, and OmniGenomics 3D.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --card-border-glow: rgba(56, 189, 248, 0.3);
+      --accent-cyan: #38bdf8;
+      --accent-violet: #a855f7;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 25%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.1) 0%, transparent 45%);
+      background-attachment: fixed;
+      overflow-x: hidden;
+    }
+
+    header {
+      padding: 2.5rem 2rem 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .badge-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 1rem;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--accent-cyan);
+      font-size: 0.825rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, var(--accent-cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      max-width: 750px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1300px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 2rem;
+    }
+
+    .app-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, transparent, var(--accent-color, var(--accent-cyan)), transparent);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .app-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--card-border-glow);
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 25px -5px var(--glow-color, rgba(56, 189, 248, 0.25));
+    }
+
+    .app-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-icon-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .icon-wrapper {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card-tag {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .app-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.65rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: #fff;
+    }
+
+    .app-desc {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      flex-grow: 1;
+    }
+
+    .features-list {
+      list-style: none;
+      margin-bottom: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .features-list li {
+      font-size: 0.875rem;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .features-list li::before {
+      content: '✓';
+      color: var(--accent-color, var(--accent-cyan));
+      font-weight: bold;
+    }
+
+    .launch-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      width: 100%;
+      padding: 0.875rem 1.5rem;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.25s ease;
+      cursor: pointer;
+    }
+
+    .launch-btn:hover {
+      background: var(--accent-color, var(--accent-cyan));
+      color: #07090e;
+      border-color: var(--accent-color, var(--accent-cyan));
+      box-shadow: 0 4px 15px var(--glow-color, rgba(56, 189, 248, 0.4));
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge-bar">⚡ Autonomous AI Workstation Suite</div>
+    <h1>Hermes Multi-Domain Science & Humanities AI</h1>
+    <p class="subtitle">An elite collection of interactive 3D WebGL workstations powered by biological deep learning, computational epigraphy, structural biology, and multi-omics APIs.</p>
+  </header>
+
+  <main>
+    <div class="grid-container">
+      
+      <!-- Card 1: PharmaVerse 3D -->
+      <div class="app-card" style="--accent-color: #38bdf8; --glow-color: rgba(56, 189, 248, 0.35);">
+        <div>
+          <div class="card-icon-header">
+            <div class="icon-wrapper" style="color: #38bdf8;">🧬</div>
+            <span class="card-tag" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">Drug Repurposing</span>
+          </div>
+          <h2 class="app-title">PharmaVerse 3D</h2>
+          <p class="app-desc">Next-Gen Precision Target & Drug Discovery Engine. Integrates AlphaFold 3D structures with per-residue pLDDT heatmaps, OpenTargets GraphQL, ChEMBL bioactivity, STRING PPI networks, and live ClinicalTrials.gov v2 data.</p>
+          <ul class="features-list">
+            <li>Interactive 3Dmol WebGL Protein Viewer</li>
+            <li>Target-Disease & STRING PPI Knowledge Graph</li>
+            <li>IC50/Ki Bioactivity & Repurposing Radar HUD</li>
+            <li>Live OpenFDA Safety & Clinical Trials Tracker</li>
+          </ul>
+        </div>
+        <a href="./pharmaverse-3d/index.html" class="launch-btn" id="launch-pharmaverse-btn">Launch PharmaVerse 3D ➔</a>
+      </div>
+
+      <!-- Card 2: ChronoTex 3D -->
+      <div class="app-card" style="--accent-color: #a855f7; --glow-color: rgba(168, 85, 247, 0.35);">
+        <div>
+          <div class="card-icon-header">
+            <div class="icon-wrapper" style="color: #a855f7;">🏛️</div>
+            <span class="card-tag" style="background: rgba(168, 85, 247, 0.15); color: #a855f7;">Epigraphy AI</span>
+          </div>
+          <h2 class="app-title">ChronoTex 3D</h2>
+          <p class="app-desc">AI-Powered Ancient Inscription & Artifact Restoration Studio. Uses Predicting The Past (Latin Aeneas & Greek Ithaca models), Three.js RTI 3D relighting, Leaflet trade route maps, and OpenAlex citation mining.</p>
+          <ul class="features-list">
+            <li>Aeneas & Ithaca Epigraphic Gap Restorer</li>
+            <li>Three.js 3D Relief Relighting Artifact Canvas</li>
+            <li>Geospatial Provenance & Discovery Map</li>
+            <li>TEI-EpiDoc Standardized XML Exporter</li>
+          </ul>
+        </div>
+        <a href="./chronotex-3d/index.html" class="launch-btn" id="launch-chronotex-btn">Launch ChronoTex 3D ➔</a>
+      </div>
+
+      <!-- Card 3: OmniGenomics 3D -->
+      <div class="app-card" style="--accent-color: #10b981; --glow-color: rgba(16, 185, 129, 0.35);">
+        <div>
+          <div class="card-icon-header">
+            <div class="icon-wrapper" style="color: #10b981;">🔬</div>
+            <span class="card-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">Multi-Omics</span>
+          </div>
+          <h2 class="app-title">OmniGenomics 3D</h2>
+          <p class="app-desc">Multi-Omics Variant Impact & Epigenomic Atlas. Features 3D chromatin track visualizer, 54-tissue GTEx expression matrix, ClinVar/gnomAD rarity dossier, and JASPAR TF binding motif comparison logos.</p>
+          <ul class="features-list">
+            <li>3D Chromatin & Genomic Track Browser</li>
+            <li>54-Tissue GTEx Expression Matrix & eQTLs</li>
+            <li>AlphaGenome & Ensembl VEP Variant Intelligence</li>
+            <li>JASPAR TF Motif Binding Alteration Logos</li>
+          </ul>
+        </div>
+        <a href="./omnigenomics-3d/index.html" class="launch-btn" id="launch-omnigenomics-btn">Launch OmniGenomics 3D ➔</a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    <p>© 2026 Hermes AI Suite — Built with Google Antigravity & Modern Web Engine</p>
+  </footer>
+
+</body>
+</html>
