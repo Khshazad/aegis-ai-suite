@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-09-19T14:34:56.867Z",
+  "status": "SUCCESS",
+  "targetsProcessed": [
+    {
+      "target": "EGFR",
+      "trialsCount": 5,
+      "lastSync": "2026-09-19T14:34:58.132Z"
+    },
+    {
+      "target": "KRAS",
+      "trialsCount": 5,
+      "lastSync": "2026-09-19T14:34:58.499Z"
+    },
+    {
+      "target": "BRCA1",
+      "trialsCount": 5,
+      "lastSync": "2026-09-19T14:34:59.018Z"
+    },
+    {
+      "target": "LRRK2",
+      "trialsCount": 5,
+      "lastSync": "2026-09-19T14:34:59.331Z"
+    }
+  ],
+  "preprintsFetched": [],
+  "summary": "Successfully automated live sync for 4 targets across ClinicalTrials.gov, OpenTargets, and gnomAD."
+}
